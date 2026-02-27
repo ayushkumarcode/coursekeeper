@@ -59,12 +59,12 @@ export default function Home() {
                 <p className="text-gray-600">
                   Visit the test page to see patch notes generation in action
                 </p>
-                <Link
-                  href="/test"
-                  className="inline-block mt-2 text-blue-600 hover:text-blue-800 font-medium"
-                >
-                  Go to Test Page →
-                </Link>
+          <Link
+            href="/coursekeeper"
+            className="inline-block mt-2 text-blue-600 hover:text-blue-800 font-medium"
+          >
+            Try Full Experience →
+          </Link>
               </div>
             </div>
 

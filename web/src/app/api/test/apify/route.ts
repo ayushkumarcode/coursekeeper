@@ -31,15 +31,33 @@ export async function GET() {
     
     console.log('✅ Apify token valid! User:', user?.username)
 
-    // Test 2: Try to fetch a simple arXiv paper
+    // Test 2: Try to fetch a simple arXiv paper (with timeout)
     console.log('🔍 Testing arXiv MCP server...')
-    const arxivResponse = await fetch(`${arxivUrl}?query=deep+learning&max_results=1`, {
-      headers: {
-        'Authorization': `Bearer ${arxivToken}`
-      }
-    })
-
-    const arxivData = await arxivResponse.json()
+    
+    let arxivResponse
+    let arxivData
+    let arxivError = null
+    
+    try {
+      const controller = new AbortController()
+      const timeoutId = setTimeout(() => controller.abort(), 5000) // 5 second timeout
+      
+      arxivResponse = await fetch(`${arxivUrl}?query=deep+learning&max_results=1`, {
+        headers: {
+          'Authorization': `Bearer ${arxivToken}`
+        },
+        signal: controller.signal
+      })
+      
+      clearTimeout(timeoutId)
+      arxivData = await arxivResponse.json()
+      console.log('✅ arXiv MCP server responded!')
+    } catch (error) {
+      console.log('⚠️ arXiv MCP server timeout or error:', error)
+      arxivError = error instanceof Error ? error.message : 'Connection timeout'
+      arxivResponse = { status: 0, statusText: 'Timeout', ok: false }
+      arxivData = { error: arxivError }
+    }
     
     return NextResponse.json({
       success: true,
@@ -52,9 +70,10 @@ export async function GET() {
         },
         arxivMcp: {
           url: arxivUrl,
-          status: arxivResponse.status,
-          statusText: arxivResponse.statusText,
-          tokenValid: arxivResponse.ok,
+          status: arxivResponse?.status || 0,
+          statusText: arxivResponse?.statusText || 'Unknown',
+          tokenValid: arxivResponse?.ok || false,
+          error: arxivError,
           sampleData: arxivData
         }
       }
